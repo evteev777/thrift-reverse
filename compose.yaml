@@ -1,0 +1,44 @@
+x-common: &common
+  user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+  read_only: true
+  network_mode: none
+  tmpfs:
+    - /tmp:rw,nosuid,nodev,mode=1777
+  volumes:
+    - type: bind
+      source: ${INPUT_DIR:-./input}
+      target: /input
+      read_only: true
+      bind:
+        create_host_path: false
+    - type: bind
+      source: ${OUTPUT_DIR:-./output}
+      target: /output
+      bind:
+        create_host_path: false
+
+services:
+  reverse:
+    <<: *common
+    build:
+      context: .
+      target: runtime
+    command: ["/input", "--output", "/output"]
+
+  reverse-024:
+    <<: *common
+    profiles: ["validate"]
+    build:
+      context: .
+      target: validated
+    command: ["/input", "--output", "/output", "--target", "0.24.0", "--validate"]
+
+  tests:
+    profiles: ["test"]
+    build:
+      context: .
+      target: tests
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,mode=1777

@@ -1,0 +1,6 @@
+*
+!thrift_reverse.py
+!build-compiler.sh
+!tests/
+!tests/**
+tests/**/__pycache__/
