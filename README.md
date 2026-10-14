@@ -66,6 +66,86 @@ docker compose run --rm reverse-024 \
 **Аргументы после имени сервиса заменяют весь `command`.** Поэтому указывай пути, профиль
 и `--validate` полностью, как в примере. ENTRYPOINT остаётся генератором.
 
+## Генерация Java из `.thrift` (compiler 0.24.0)
+
+После восстановления IDL можно сгенерировать новые Java-исходники отдельной командой:
+
+```bash
+mkdir -p generated-java
+docker compose run --rm --build java-024
+```
+
+По умолчанию сервис читает `.thrift` из `OUTPUT_DIR` (обычно `./output`), рекурсивно
+обходит вложенные каталоги и сохраняет Java в `./generated-java`. Старый `.env` менять
+не обязательно. Для других путей добавь в `.env`:
+
+```dotenv
+THRIFT_INPUT_DIR=./output
+JAVA_OUTPUT_DIR=./generated-java
+```
+
+Оба каталога должны существовать; выходной каталог должен быть доступен для записи
+пользователю `LOCAL_UID:LOCAL_GID`. Исходные `.thrift` монтируются только для чтения.
+
+Структура результата соответствует `namespace java`:
+
+```text
+generated-java/
+  ru/example/api/SomeStruct.java
+  ru/example/api/SomeService.java
+  java-report.json
+```
+
+Compiler обязательно должен иметь версию **0.24.0**; другая версия отклоняется.
+Опция compiler `-r` включает генерацию типов из `include`, даже если на входе один файл.
+Повторно полученные одинаковые Java-файлы объединяются; разные файлы с одинаковым
+путём приводят к ошибке до записи результата. Каждый входной IDL обрабатывается отдельно,
+поэтому общие include могут разбираться несколько раз.
+
+Повторная генерация с перезаписью:
+
+```bash
+docker compose run --rm java-024 /input --output /output --force
+```
+
+Генерация одного IDL из смонтированной папки:
+
+```bash
+docker compose run --rm java-024 /input/pkg_ru_example_api.thrift --output /output
+```
+
+Дополнительные каталоги include и опции Java generator:
+
+```bash
+docker compose run --rm java-024 /input --output /output \
+  -I /input/common --java-options generated_annotations=suppress
+```
+
+`-I` повторяемый; пути внутри контейнера должны находиться в смонтированных каталогах.
+`--java-options` принимает строку опций Java generator через запятую и **заменяет**
+значение по умолчанию `generated_annotations=undated`. Этот default убирает дату
+из `@Generated`, чтобы повторная генерация не создавала изменений только из-за даты.
+`generated_annotations=suppress` полностью убирает `@Generated`.
+
+Без Docker:
+
+```bash
+python3 thrift_java.py ./output --output ./generated-java \
+  --thrift /path/to/thrift-0.24.0
+```
+
+`java-report.json` содержит версию compiler, его опции, входные файлы, список созданных
+Java-файлов и диагностические сообщения. Код возврата: `0` — успех, `2` — ошибка.
+При ошибке компилятора, конфликте классов или существующих файлах без `--force`
+выходные файлы не изменяются. При записи замена атомарна для каждого файла отдельно;
+дисковая ошибка может оставить частично обновлённый каталог.
+`--force` не удаляет устаревшие классы и посторонние файлы; для чистой генерации
+используй новый пустой каталог.
+
+Это генерация исходников, без `javac` и Maven. Для их использования подключи к Java-проекту
+совместимый Thrift runtime (обычно `org.apache.thrift:libthrift:0.24.0`) и необходимые
+зависимости проекта. Ручные изменения старых Java-классов в новые не переносятся.
+
 ## Результат
 
 По одному файлу на Java package:

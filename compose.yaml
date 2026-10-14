@@ -33,6 +33,27 @@ services:
       target: validated
     command: ["/input", "--output", "/output", "--target", "0.24.0", "--validate"]
 
+  java-024:
+    <<: *common
+    profiles: ["java"]
+    build:
+      context: .
+      target: validated
+    entrypoint: ["python", "/app/thrift_java.py"]
+    command: ["/input", "--output", "/output"]
+    volumes:
+      - type: bind
+        source: ${THRIFT_INPUT_DIR:-${OUTPUT_DIR:-./output}}
+        target: /input
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${JAVA_OUTPUT_DIR:-./generated-java}
+        target: /output
+        bind:
+          create_host_path: false
+
   tests:
     profiles: ["test"]
     build:

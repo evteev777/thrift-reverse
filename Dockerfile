@@ -7,7 +7,7 @@ RUN sh /build-compiler.sh /usr/local/bin/thrift
 FROM python:3.12-slim-bookworm AS runtime
 WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-COPY thrift_reverse.py /app/
+COPY thrift_reverse.py thrift_java.py /app/
 ENTRYPOINT ["python", "/app/thrift_reverse.py"]
 CMD ["/input", "--output", "/output"]
 

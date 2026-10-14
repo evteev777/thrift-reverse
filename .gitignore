@@ -5,3 +5,5 @@ input/*
 output/*
 !input/.gitkeep
 !output/.gitkeep
+generated-java/*
+!generated-java/.gitkeep

@@ -1,5 +1,6 @@
 *
 !thrift_reverse.py
+!thrift_java.py
 !build-compiler.sh
 !tests/
 !tests/**

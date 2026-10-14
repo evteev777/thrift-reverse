@@ -10,7 +10,7 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 TOKEN = re.compile(r'\s+|//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*|(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?[fFdDlL]?|.', re.ASCII)
 IDENT = re.compile(r'^[A-Za-z_][A-Za-z_0-9]*$')
 PRIMITIVES = {'BOOL':'bool', 'BYTE':'byte', 'I16':'i16', 'I32':'i32', 'I64':'i64', 'DOUBLE':'double', 'STRING':'string', 'UUID':'uuid'}
