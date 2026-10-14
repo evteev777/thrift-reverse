@@ -2,6 +2,7 @@
 """Generate Java sources from Thrift IDL using Apache Thrift 0.24.0."""
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -89,13 +90,17 @@ def generate(source, output, compiler='thrift', includes=(), options='generated_
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('input', type=Path, help='.thrift file or directory scanned recursively')
-    parser.add_argument('-o', '--output', required=True, type=Path)
+    parser.add_argument('input', nargs='?', type=Path, default=os.environ.get('THRIFT_JAVA_INPUT'),
+                        help='.thrift file or directory; defaults to THRIFT_JAVA_INPUT (container: /input)')
+    parser.add_argument('-o', '--output', type=Path, default=os.environ.get('THRIFT_JAVA_OUTPUT'),
+                        help='Output directory; defaults to THRIFT_JAVA_OUTPUT (container: /output)')
     parser.add_argument('-I', '--include', action='append', default=[], type=Path, help='Additional include directory; repeatable')
     parser.add_argument('--thrift', default='thrift', help='Path to compiler 0.24.0')
     parser.add_argument('--java-options', default='generated_annotations=undated', help='Compiler Java options, comma-separated; replaces the default')
     parser.add_argument('--force', action='store_true', help='Replace generated files; does not delete stale or unrelated files')
     args = parser.parse_args(argv)
+    if args.input is None or args.output is None:
+        parser.error('provide input and -o/--output, or set THRIFT_JAVA_INPUT and THRIFT_JAVA_OUTPUT')
     try:
         report = generate(args.input, args.output, args.thrift, args.include, args.java_options, args.force)
         print(json.dumps({'status': 'ok', 'compiler': report['compiler'], 'input_files': len(report['inputs']),

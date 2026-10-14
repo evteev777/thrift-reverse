@@ -5,11 +5,35 @@ import tempfile
 import unittest
 from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from thrift_java import generate, GenerationError
+from thrift_java import generate, GenerationError, main
 from thrift_reverse import Generator
 
 COMPILER = os.environ.get('THRIFT_BIN')
 
+
+
+class JavaCliTests(unittest.TestCase):
+    @patch.dict(os.environ, {'THRIFT_JAVA_INPUT': '/input', 'THRIFT_JAVA_OUTPUT': '/output'})
+    @patch('thrift_java.generate')
+    def test_force_only_uses_container_defaults(self, generate_mock):
+        generate_mock.return_value = {'compiler': 'Thrift version 0.24.0', 'inputs': [], 'files': [], 'diagnostics': []}
+        self.assertEqual(main(['--force']), 0)
+        args = generate_mock.call_args.args
+        self.assertEqual(args[:2], (Path('/input'), Path('/output')))
+        self.assertTrue(args[-1])
+
+    @patch.dict(os.environ, {'THRIFT_JAVA_INPUT': '/input', 'THRIFT_JAVA_OUTPUT': '/output'})
+    @patch('thrift_java.generate')
+    def test_explicit_paths_override_defaults(self, generate_mock):
+        generate_mock.return_value = {'compiler': 'Thrift version 0.24.0', 'inputs': [], 'files': [], 'diagnostics': []}
+        self.assertEqual(main(['custom.thrift', '-o', 'custom-java']), 0)
+        self.assertEqual(generate_mock.call_args.args[:2], (Path('custom.thrift'), Path('custom-java')))
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_native_cli_still_requires_paths(self):
+        with self.assertRaises(SystemExit) as error:
+            main(['--force'])
+        self.assertEqual(error.exception.code, 2)
 
 @unittest.skipUnless(COMPILER, 'Set THRIFT_BIN to compiler 0.24.0')
 class JavaGenerationTests(unittest.TestCase):

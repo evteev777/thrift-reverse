@@ -12,6 +12,7 @@ ENTRYPOINT ["python", "/app/thrift_reverse.py"]
 CMD ["/input", "--output", "/output"]
 
 FROM runtime AS validated
+ENV THRIFT_JAVA_INPUT=/input THRIFT_JAVA_OUTPUT=/output
 RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=compiler-build /usr/local/bin/thrift /usr/local/bin/thrift
