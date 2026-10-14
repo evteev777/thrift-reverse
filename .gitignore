@@ -7,3 +7,5 @@ output/*
 !output/.gitkeep
 generated-java/*
 !generated-java/.gitkeep
+/.idea/
+*.iml
